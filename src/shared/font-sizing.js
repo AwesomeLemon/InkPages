@@ -44,6 +44,18 @@
     return clamp(effective, minEffective, maxEffective);
   }
 
+  function getEffectiveUiFontSize(baseFontSizePx, options) {
+    const opts = options || {};
+    const baseValue = Number(baseFontSizePx);
+    const fallbackSize = Number.isFinite(opts.fallbackFontSize) ? opts.fallbackFontSize : 16;
+    const base = Number.isFinite(baseValue) ? baseValue : fallbackSize;
+    const scale = getViewportScale(opts.viewport);
+    const effective = base / scale;
+    const minEffective = Number.isFinite(opts.minEffective) ? opts.minEffective : 8;
+    const maxEffective = Number.isFinite(opts.maxEffective) ? opts.maxEffective : 32;
+    return clamp(effective, minEffective, maxEffective);
+  }
+
   function applyEffectiveReaderFontSize(rootEl, baseFontSizePx, options) {
     if (!rootEl) return null;
     const effective = getEffectiveReaderFontSize(baseFontSizePx, options);
@@ -51,11 +63,19 @@
     return effective;
   }
 
+  function applyEffectiveUiFontSize(rootEl, baseFontSizePx, options) {
+    if (!rootEl) return null;
+    const effective = getEffectiveUiFontSize(baseFontSizePx, options);
+    rootEl.style.setProperty('--ui-font-size', `${effective}px`);
+    return effective;
+  }
+
   global.InkPagesFontSizing = {
     normalizeReaderFontSize,
     getViewportScale,
     getEffectiveReaderFontSize,
-    applyEffectiveReaderFontSize
+    getEffectiveUiFontSize,
+    applyEffectiveReaderFontSize,
+    applyEffectiveUiFontSize
   };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
-

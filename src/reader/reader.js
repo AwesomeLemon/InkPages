@@ -42,6 +42,7 @@
     noImages: false,
     safeAreaManual: 0,
     topSpaceManual: 0,
+    menuHeightScale: 1,
     floatingButtonEnabled: isLikelyAndroid,
     floatingButtonSize: 50,
     menuAtBottom: false
@@ -57,6 +58,12 @@
     const numericValue = Number(value);
     const fallback = 0;
     return Math.max(-80, Math.min(80, Number.isFinite(numericValue) ? numericValue : fallback));
+  }
+
+  function normalizeMenuHeightScale(value) {
+    const numericValue = Number(value);
+    const fallback = 1;
+    return Math.max(0.7, Math.min(1.6, Number.isFinite(numericValue) ? numericValue : fallback));
   }
 
   // ============================================
@@ -103,6 +110,8 @@
       topSpaceSlider: document.getElementById('top-space-slider'),
       topSpaceValue: document.getElementById('top-space-value'),
       toggleMenuBottom: document.getElementById('toggle-menu-bottom'),
+      menuHeightSlider: document.getElementById('menu-height-slider'),
+      menuHeightValue: document.getElementById('menu-height-value'),
       toggleFloatingButton: document.getElementById('toggle-floating-button'),
       floatingButtonSizeSlider: document.getElementById('floating-button-size-slider'),
       floatingButtonSizeValue: document.getElementById('floating-button-size-value'),
@@ -180,6 +189,7 @@
       settings.fontSize = fontSizing.normalizeReaderFontSize(settings.fontSize);
       settings.safeAreaManual = normalizeBottomMenuGap(settings.safeAreaManual);
       settings.topSpaceManual = normalizeBottomMenuGap(settings.topSpaceManual);
+      settings.menuHeightScale = normalizeMenuHeightScale(settings.menuHeightScale);
       settings.floatingButtonSize = normalizeFloatingButtonSize(settings.floatingButtonSize);
     } catch (error) {
       console.warn('Failed to load settings:', error);
@@ -441,10 +451,12 @@
     body.classList.remove('font-serif', 'font-sans-serif', 'font-monospace');
     body.classList.add(`font-${settings.fontFamily}`);
     fontSizing.applyEffectiveReaderFontSize(root, settings.fontSize);
+    fontSizing.applyEffectiveUiFontSize(root, 16);
     root.style.setProperty('--line-height', settings.lineHeight);
     root.style.setProperty('--page-width', `${settings.pageWidth}px`);
     root.style.setProperty('--bottom-menu-content-offset', `${settings.safeAreaManual}px`);
     root.style.setProperty('--top-menu-content-offset', `${settings.topSpaceManual}px`);
+    root.style.setProperty('--menu-height-scale', settings.menuHeightScale.toFixed(2));
     root.setAttribute('data-menu-position', settings.menuAtBottom ? 'bottom' : 'top');
 
     body.classList.toggle('bold-text', settings.boldText);
@@ -461,6 +473,7 @@
         setupPagination();
       }, 50);
     }
+
   }
 
   function stabilizeViewportLayout() {
@@ -483,6 +496,7 @@
     root.style.setProperty('--vv-top-offset', `${topOffset}px`);
     root.style.setProperty('--vv-bottom-offset', `${bottomOffset}px`);
     fontSizing.applyEffectiveReaderFontSize(root, settings.fontSize);
+    fontSizing.applyEffectiveUiFontSize(root, 16);
     stabilizeViewportLayout();
   }
 
@@ -521,6 +535,10 @@
     if (elements.topSpaceSlider) {
       elements.topSpaceSlider.value = settings.topSpaceManual;
       elements.topSpaceValue.textContent = `${settings.topSpaceManual}px`;
+    }
+    if (elements.menuHeightSlider) {
+      elements.menuHeightSlider.value = settings.menuHeightScale;
+      elements.menuHeightValue.textContent = `${Math.round(settings.menuHeightScale * 100)}%`;
     }
     if (elements.toggleMenuBottom) elements.toggleMenuBottom.checked = settings.menuAtBottom;
     if (elements.toggleFloatingButton) elements.toggleFloatingButton.checked = settings.floatingButtonEnabled;
@@ -708,6 +726,14 @@
       });
       elements.topSpaceSlider.addEventListener('change', saveSettings);
     }
+    if (elements.menuHeightSlider) {
+      elements.menuHeightSlider.addEventListener('input', (e) => {
+        settings.menuHeightScale = normalizeMenuHeightScale(parseFloat(e.target.value));
+        elements.menuHeightValue.textContent = `${Math.round(settings.menuHeightScale * 100)}%`;
+        applySettings();
+      });
+      elements.menuHeightSlider.addEventListener('change', saveSettings);
+    }
 
     if (elements.toggleMenuBottom) {
       elements.toggleMenuBottom.addEventListener('change', (e) => {
@@ -819,7 +845,9 @@
   }
 
   function openSettings() {
-    if (elements.settingsPanel) elements.settingsPanel.classList.remove('hidden');
+    if (elements.settingsPanel) {
+      elements.settingsPanel.classList.remove('hidden');
+    }
   }
 
   function toggleSettings() {
@@ -828,7 +856,9 @@
   }
 
   function closeSettings() {
-    if (elements.settingsPanel) elements.settingsPanel.classList.add('hidden');
+    if (elements.settingsPanel) {
+      elements.settingsPanel.classList.add('hidden');
+    }
   }
 
   function closeReader() {
