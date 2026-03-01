@@ -19,6 +19,7 @@
   window.__einkReaderInjected = true;
 
   const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+  const fontSizing = globalThis.InkPagesFontSizing;
 
   // State
   let isReaderActive = false;
@@ -961,6 +962,11 @@
           el.removeAttribute('href');
         }
       }
+
+      // Remove legacy font attributes that can override the reader base size
+      ['size', 'face'].forEach(attr => {
+        el.removeAttribute(attr);
+      });
     });
 
     // Remove script and style elements (Readability should have done this, but double-check)
@@ -1235,6 +1241,15 @@
       floatingButtonSize: 50
     };
 
+    // Debug options for testing pagination fixes (controlled via Settings panel)
+    const debugOptions = {
+      zeroUlLiStyles: false,
+      forceListingInline: false,
+      roundPixels: false,
+      useCalculatedWidth: false,
+      integerColumnWidth: false
+    };
+
     // Store state for later use
     window.__einkReaderState = { currentPage, totalPages, pageWidth, settings };
 
@@ -1253,6 +1268,7 @@
           settings = { ...settings, ...result.readerSettings };
           window.__einkReaderState.settings = settings;
         }
+        settings.fontSize = fontSizing.normalizeReaderFontSize(settings.fontSize);
         settings.floatingButtonSize = normalizeFloatingButtonSize(settings.floatingButtonSize);
         setFloatingButtonSize(settings.floatingButtonSize);
         setFloatingButtonEnabled(settings.floatingButtonEnabled);
@@ -1275,7 +1291,7 @@
       root.setAttribute('data-theme', settings.theme);
       root.classList.remove('font-serif', 'font-sans-serif', 'font-monospace');
       root.classList.add(`font-${settings.fontFamily}`);
-      root.style.setProperty('--font-size', `${settings.fontSize}px`);
+      fontSizing.applyEffectiveReaderFontSize(root, settings.fontSize);
       root.style.setProperty('--line-height', settings.lineHeight);
       root.style.setProperty('--page-width', `${settings.pageWidth}px`);
       root.style.setProperty('--safe-area-manual', `${settings.safeAreaManual}px`);
@@ -1317,6 +1333,7 @@
 
       root.style.setProperty('--vv-top-offset', `${topOffset}px`);
       root.style.setProperty('--vv-bottom-offset', `${bottomOffset}px`);
+      fontSizing.applyEffectiveReaderFontSize(root, settings.fontSize);
       stabilizeViewportLayout();
     }
 
@@ -1653,7 +1670,7 @@
       // Font size slider
       if (elements.fontSizeSlider) {
         elements.fontSizeSlider.addEventListener('input', (e) => {
-          settings.fontSize = parseInt(e.target.value, 10);
+          settings.fontSize = fontSizing.normalizeReaderFontSize(parseInt(e.target.value, 10));
           elements.fontSizeValue.textContent = `${settings.fontSize}px`;
           applySettings();
         });
@@ -1998,15 +2015,6 @@
 </body>
 </html>`;
     }
-
-    // Debug options for testing pagination fixes (controlled via Settings panel)
-    const debugOptions = {
-      zeroUlLiStyles: false,
-      forceListingInline: false,
-      roundPixels: false,
-      useCalculatedWidth: false,
-      integerColumnWidth: false
-    };
 
     function setupDebugControls() {
       try {

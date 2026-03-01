@@ -20,6 +20,7 @@
   // Cross-browser compatibility
   const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
   const isLikelyAndroid = /Android/i.test(navigator.userAgent);
+  const fontSizing = globalThis.InkPagesFontSizing;
 
   // ============================================
   // State
@@ -164,6 +165,7 @@
       if (result.readerSettings) {
         settings = { ...settings, ...result.readerSettings };
       }
+      settings.fontSize = fontSizing.normalizeReaderFontSize(settings.fontSize);
       settings.floatingButtonSize = normalizeFloatingButtonSize(settings.floatingButtonSize);
     } catch (error) {
       console.warn('Failed to load settings:', error);
@@ -424,7 +426,7 @@
     root.setAttribute('data-theme', settings.theme);
     body.classList.remove('font-serif', 'font-sans-serif', 'font-monospace');
     body.classList.add(`font-${settings.fontFamily}`);
-    root.style.setProperty('--font-size', `${settings.fontSize}px`);
+    fontSizing.applyEffectiveReaderFontSize(root, settings.fontSize);
     root.style.setProperty('--line-height', settings.lineHeight);
     root.style.setProperty('--page-width', `${settings.pageWidth}px`);
     root.setAttribute('data-menu-position', settings.menuAtBottom ? 'bottom' : 'top');
@@ -464,6 +466,7 @@
 
     root.style.setProperty('--vv-top-offset', `${topOffset}px`);
     root.style.setProperty('--vv-bottom-offset', `${bottomOffset}px`);
+    fontSizing.applyEffectiveReaderFontSize(root, settings.fontSize);
     stabilizeViewportLayout();
   }
 
@@ -582,7 +585,7 @@
     // Font size slider
     if (elements.fontSizeSlider) {
       elements.fontSizeSlider.addEventListener('input', (e) => {
-        settings.fontSize = parseInt(e.target.value, 10);
+        settings.fontSize = fontSizing.normalizeReaderFontSize(parseInt(e.target.value, 10));
         elements.fontSizeValue.textContent = `${settings.fontSize}px`;
         applySettings();
       });

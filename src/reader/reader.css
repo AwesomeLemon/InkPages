@@ -91,6 +91,14 @@ html {
   scroll-behavior: auto;
 }
 
+html,
+body,
+:host,
+#reader-wrapper {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body, #reader-wrapper {
   font-family: var(--font-family);
   font-size: var(--font-size);
@@ -360,6 +368,8 @@ body.justify-text #article-content,
   /* Allow horizontal expansion for columns */
   /* Width is set to a large value by JS to allow column creation */
   /* Height is set by JS to match viewport height */
+  font-size: 1em;
+  line-height: inherit;
   column-fill: auto;
   /* column-width and column-gap set by JS */
   user-select: text;
