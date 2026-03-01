@@ -36,11 +36,12 @@
   /* Uses CSS env() for automatic detection, plus manual offset */
   --safe-area-top: 0px;
   --safe-area-bottom: 0px;
-  --safe-area-manual: 0px; /* User-adjustable offset */
+  --top-menu-content-offset: 0px; /* User-adjustable gap below top menu */
+  --bottom-menu-content-offset: 0px; /* User-adjustable gap above bottom menu */
   --vv-top-offset: 0px;
   --vv-bottom-offset: 0px;
   --ui-top-offset: calc(env(safe-area-inset-top, 0px) + var(--safe-area-top) + var(--vv-top-offset));
-  --ui-bottom-offset: calc(env(safe-area-inset-bottom, 0px) + var(--safe-area-bottom) + var(--safe-area-manual) + var(--vv-bottom-offset));
+  --ui-bottom-offset: calc(env(safe-area-inset-bottom, 0px) + var(--safe-area-bottom) + var(--vv-bottom-offset));
 }
 
 /* Sepia theme */
@@ -276,10 +277,10 @@ body.justify-text #article-content,
    ============================================ */
 #reader-main {
   position: fixed;
-  top: calc(var(--header-height) + var(--ui-top-offset));
+  top: calc(var(--header-height) + var(--ui-top-offset) + var(--top-menu-content-offset));
   left: 0;
   right: 0;
-  bottom: calc(var(--progress-height) + var(--ui-bottom-offset));
+  bottom: calc(var(--progress-height) + var(--ui-bottom-offset) + var(--bottom-menu-content-offset));
   display: flex;
   justify-content: center;
   overflow: hidden;
@@ -287,8 +288,8 @@ body.justify-text #article-content,
 
 [data-menu-position="bottom"] #reader-main,
 :host([data-menu-position="bottom"]) #reader-main {
-  top: var(--ui-top-offset);
-  bottom: calc(var(--header-height) + var(--progress-height) + var(--ui-bottom-offset));
+  top: calc(var(--ui-top-offset) + var(--top-menu-content-offset));
+  bottom: calc(var(--header-height) + var(--progress-height) + var(--ui-bottom-offset) + var(--bottom-menu-content-offset));
 }
 
 #article-container {
@@ -518,8 +519,8 @@ body.justify-text #article-content,
    ============================================ */
 .tap-zone {
   position: fixed;
-  top: calc(var(--header-height) + var(--ui-top-offset));
-  bottom: calc(var(--progress-height) + var(--ui-bottom-offset));
+  top: calc(var(--header-height) + var(--ui-top-offset) + var(--top-menu-content-offset));
+  bottom: calc(var(--progress-height) + var(--ui-bottom-offset) + var(--bottom-menu-content-offset));
   width: 25%;
   min-width: 80px;
   cursor: pointer;
@@ -531,8 +532,8 @@ body.justify-text #article-content,
 
 [data-menu-position="bottom"] .tap-zone,
 :host([data-menu-position="bottom"]) .tap-zone {
-  top: var(--ui-top-offset);
-  bottom: calc(var(--header-height) + var(--progress-height) + var(--ui-bottom-offset));
+  top: calc(var(--ui-top-offset) + var(--top-menu-content-offset));
+  bottom: calc(var(--header-height) + var(--progress-height) + var(--ui-bottom-offset) + var(--bottom-menu-content-offset));
   z-index: 900;
 }
 

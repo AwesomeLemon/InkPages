@@ -40,6 +40,8 @@
     justifyText: false,
     grayscale: false,
     noImages: false,
+    safeAreaManual: 0,
+    topSpaceManual: 0,
     floatingButtonEnabled: isLikelyAndroid,
     floatingButtonSize: 50,
     menuAtBottom: false
@@ -49,6 +51,12 @@
     const numericValue = Number(value);
     const fallback = 50;
     return Math.max(32, Math.min(84, Number.isFinite(numericValue) ? numericValue : fallback));
+  }
+
+  function normalizeBottomMenuGap(value) {
+    const numericValue = Number(value);
+    const fallback = 0;
+    return Math.max(-80, Math.min(80, Number.isFinite(numericValue) ? numericValue : fallback));
   }
 
   // ============================================
@@ -90,6 +98,10 @@
       toggleJustify: document.getElementById('toggle-justify'),
       toggleGrayscale: document.getElementById('toggle-grayscale'),
       toggleNoImages: document.getElementById('toggle-no-images'),
+      safeAreaSlider: document.getElementById('safe-area-slider'),
+      safeAreaValue: document.getElementById('safe-area-value'),
+      topSpaceSlider: document.getElementById('top-space-slider'),
+      topSpaceValue: document.getElementById('top-space-value'),
       toggleMenuBottom: document.getElementById('toggle-menu-bottom'),
       toggleFloatingButton: document.getElementById('toggle-floating-button'),
       floatingButtonSizeSlider: document.getElementById('floating-button-size-slider'),
@@ -166,6 +178,8 @@
         settings = { ...settings, ...result.readerSettings };
       }
       settings.fontSize = fontSizing.normalizeReaderFontSize(settings.fontSize);
+      settings.safeAreaManual = normalizeBottomMenuGap(settings.safeAreaManual);
+      settings.topSpaceManual = normalizeBottomMenuGap(settings.topSpaceManual);
       settings.floatingButtonSize = normalizeFloatingButtonSize(settings.floatingButtonSize);
     } catch (error) {
       console.warn('Failed to load settings:', error);
@@ -429,6 +443,8 @@
     fontSizing.applyEffectiveReaderFontSize(root, settings.fontSize);
     root.style.setProperty('--line-height', settings.lineHeight);
     root.style.setProperty('--page-width', `${settings.pageWidth}px`);
+    root.style.setProperty('--bottom-menu-content-offset', `${settings.safeAreaManual}px`);
+    root.style.setProperty('--top-menu-content-offset', `${settings.topSpaceManual}px`);
     root.setAttribute('data-menu-position', settings.menuAtBottom ? 'bottom' : 'top');
 
     body.classList.toggle('bold-text', settings.boldText);
@@ -498,6 +514,14 @@
     if (elements.toggleJustify) elements.toggleJustify.checked = settings.justifyText;
     if (elements.toggleGrayscale) elements.toggleGrayscale.checked = settings.grayscale;
     if (elements.toggleNoImages) elements.toggleNoImages.checked = settings.noImages;
+    if (elements.safeAreaSlider) {
+      elements.safeAreaSlider.value = settings.safeAreaManual;
+      elements.safeAreaValue.textContent = `${settings.safeAreaManual}px`;
+    }
+    if (elements.topSpaceSlider) {
+      elements.topSpaceSlider.value = settings.topSpaceManual;
+      elements.topSpaceValue.textContent = `${settings.topSpaceManual}px`;
+    }
     if (elements.toggleMenuBottom) elements.toggleMenuBottom.checked = settings.menuAtBottom;
     if (elements.toggleFloatingButton) elements.toggleFloatingButton.checked = settings.floatingButtonEnabled;
 
@@ -666,6 +690,23 @@
         applySettings();
         saveSettings();
       });
+    }
+
+    if (elements.safeAreaSlider) {
+      elements.safeAreaSlider.addEventListener('input', (e) => {
+        settings.safeAreaManual = normalizeBottomMenuGap(parseInt(e.target.value, 10));
+        elements.safeAreaValue.textContent = `${settings.safeAreaManual}px`;
+        applySettings();
+      });
+      elements.safeAreaSlider.addEventListener('change', saveSettings);
+    }
+    if (elements.topSpaceSlider) {
+      elements.topSpaceSlider.addEventListener('input', (e) => {
+        settings.topSpaceManual = normalizeBottomMenuGap(parseInt(e.target.value, 10));
+        elements.topSpaceValue.textContent = `${settings.topSpaceManual}px`;
+        applySettings();
+      });
+      elements.topSpaceSlider.addEventListener('change', saveSettings);
     }
 
     if (elements.toggleMenuBottom) {

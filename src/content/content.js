@@ -35,6 +35,12 @@
   let floatingButtonSize = 50;
   let floatingButtonElement = null;
 
+  function normalizeBottomMenuGap(value) {
+    const numericValue = Number(value);
+    const fallback = 0;
+    return Math.max(-80, Math.min(80, Number.isFinite(numericValue) ? numericValue : fallback));
+  }
+
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
@@ -1214,7 +1220,9 @@
       floatingButtonSizeValue: shadowRoot.getElementById('floating-button-size-value'),
       sizeBtns: shadowRoot.querySelectorAll('.size-btn'),
       safeAreaSlider: shadowRoot.getElementById('safe-area-slider'),
-      safeAreaValue: shadowRoot.getElementById('safe-area-value')
+      safeAreaValue: shadowRoot.getElementById('safe-area-value'),
+      topSpaceSlider: shadowRoot.getElementById('top-space-slider'),
+      topSpaceValue: shadowRoot.getElementById('top-space-value')
     };
 
     // Store elements for later use
@@ -1235,6 +1243,7 @@
       grayscale: false,
       noImages: false,
       safeAreaManual: 0,
+      topSpaceManual: 0,
       listingModeEnabled: true,
       menuAtBottom: false,
       floatingButtonEnabled: isLikelyAndroid,
@@ -1269,6 +1278,8 @@
           window.__einkReaderState.settings = settings;
         }
         settings.fontSize = fontSizing.normalizeReaderFontSize(settings.fontSize);
+        settings.safeAreaManual = normalizeBottomMenuGap(settings.safeAreaManual);
+        settings.topSpaceManual = normalizeBottomMenuGap(settings.topSpaceManual);
         settings.floatingButtonSize = normalizeFloatingButtonSize(settings.floatingButtonSize);
         setFloatingButtonSize(settings.floatingButtonSize);
         setFloatingButtonEnabled(settings.floatingButtonEnabled);
@@ -1294,7 +1305,8 @@
       fontSizing.applyEffectiveReaderFontSize(root, settings.fontSize);
       root.style.setProperty('--line-height', settings.lineHeight);
       root.style.setProperty('--page-width', `${settings.pageWidth}px`);
-      root.style.setProperty('--safe-area-manual', `${settings.safeAreaManual}px`);
+      root.style.setProperty('--bottom-menu-content-offset', `${settings.safeAreaManual}px`);
+      root.style.setProperty('--top-menu-content-offset', `${settings.topSpaceManual}px`);
       root.setAttribute('data-menu-position', settings.menuAtBottom ? 'bottom' : 'top');
 
       root.classList.toggle('bold-text', settings.boldText);
@@ -1369,6 +1381,10 @@
       if (elements.safeAreaSlider) {
         elements.safeAreaSlider.value = settings.safeAreaManual;
         elements.safeAreaValue.textContent = `${settings.safeAreaManual}px`;
+      }
+      if (elements.topSpaceSlider) {
+        elements.topSpaceSlider.value = settings.topSpaceManual;
+        elements.topSpaceValue.textContent = `${settings.topSpaceManual}px`;
       }
 
       if (elements.toggleListingMode) {
@@ -1753,11 +1769,19 @@
       // Safe area slider
       if (elements.safeAreaSlider) {
         elements.safeAreaSlider.addEventListener('input', (e) => {
-          settings.safeAreaManual = parseInt(e.target.value, 10);
+          settings.safeAreaManual = normalizeBottomMenuGap(parseInt(e.target.value, 10));
           elements.safeAreaValue.textContent = `${settings.safeAreaManual}px`;
           applySettings();
         });
         elements.safeAreaSlider.addEventListener('change', saveSettings);
+      }
+      if (elements.topSpaceSlider) {
+        elements.topSpaceSlider.addEventListener('input', (e) => {
+          settings.topSpaceManual = normalizeBottomMenuGap(parseInt(e.target.value, 10));
+          elements.topSpaceValue.textContent = `${settings.topSpaceManual}px`;
+          applySettings();
+        });
+        elements.topSpaceSlider.addEventListener('change', saveSettings);
       }
 
       // Listing mode toggle
