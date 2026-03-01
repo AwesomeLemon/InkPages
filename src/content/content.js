@@ -1177,7 +1177,6 @@
       articleContent: shadowRoot.getElementById('article-content'),
       siteName: shadowRoot.getElementById('site-name'),
       compactTitle: shadowRoot.getElementById('compact-title'),
-      headerCenter: shadowRoot.querySelector('.header-center'),
       articleHeader: shadowRoot.getElementById('article-header'),
       pageIndicator: shadowRoot.getElementById('page-indicator'),
       progressFill: shadowRoot.getElementById('progress-fill'),
@@ -1203,6 +1202,7 @@
       toggleGrayscale: shadowRoot.getElementById('toggle-grayscale'),
       toggleNoImages: shadowRoot.getElementById('toggle-no-images'),
       toggleListingMode: shadowRoot.getElementById('toggle-listing-mode'),
+      toggleMenuBottom: shadowRoot.getElementById('toggle-menu-bottom'),
       toggleFloatingButton: shadowRoot.getElementById('toggle-floating-button'),
       floatingButtonSizeSlider: shadowRoot.getElementById('floating-button-size-slider'),
       floatingButtonSizeValue: shadowRoot.getElementById('floating-button-size-value'),
@@ -1230,12 +1230,15 @@
       noImages: false,
       safeAreaManual: 0,
       listingModeEnabled: true,
+      menuAtBottom: false,
       floatingButtonEnabled: isLikelyAndroid,
       floatingButtonSize: 50
     };
 
     // Store state for later use
     window.__einkReaderState = { currentPage, totalPages, pageWidth, settings };
+
+    updateViewportInsets();
 
     // Load settings
     loadSettings();
@@ -1276,6 +1279,7 @@
       root.style.setProperty('--line-height', settings.lineHeight);
       root.style.setProperty('--page-width', `${settings.pageWidth}px`);
       root.style.setProperty('--safe-area-manual', `${settings.safeAreaManual}px`);
+      root.setAttribute('data-menu-position', settings.menuAtBottom ? 'bottom' : 'top');
 
       root.classList.toggle('bold-text', settings.boldText);
       root.classList.toggle('justify-text', settings.justifyText);
@@ -1292,6 +1296,28 @@
           setupPagination();
         }, 50);
       }
+    }
+
+    function stabilizeViewportLayout() {
+      const layoutAnchor = elements.pageIndicator || shadowRoot.host;
+      if (!layoutAnchor || !layoutAnchor.getBoundingClientRect) return;
+      layoutAnchor.getBoundingClientRect();
+    }
+
+    function updateViewportInsets() {
+      const root = shadowRoot.host;
+      const vv = window.visualViewport;
+      let topOffset = 0;
+      let bottomOffset = 0;
+
+      if (vv) {
+        topOffset = Math.max(0, Math.round(vv.offsetTop));
+        bottomOffset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      }
+
+      root.style.setProperty('--vv-top-offset', `${topOffset}px`);
+      root.style.setProperty('--vv-bottom-offset', `${bottomOffset}px`);
+      stabilizeViewportLayout();
     }
 
     function updateSettingsUI() {
@@ -1330,6 +1356,10 @@
 
       if (elements.toggleListingMode) {
         elements.toggleListingMode.checked = settings.listingModeEnabled;
+      }
+
+      if (elements.toggleMenuBottom) {
+        elements.toggleMenuBottom.checked = settings.menuAtBottom;
       }
 
       if (elements.toggleFloatingButton) {
@@ -1592,7 +1622,7 @@
       // Settings
       if (elements.btnSettings) {
         elements.btnSettings.addEventListener('click', () => {
-          elements.settingsPanel.classList.remove('hidden');
+          elements.settingsPanel.classList.toggle('hidden');
         });
       }
       if (elements.btnCloseSettings) {
@@ -1721,6 +1751,14 @@
         });
       }
 
+      if (elements.toggleMenuBottom) {
+        elements.toggleMenuBottom.addEventListener('change', (e) => {
+          settings.menuAtBottom = e.target.checked;
+          applySettings();
+          saveSettings();
+        });
+      }
+
       if (elements.toggleFloatingButton) {
         elements.toggleFloatingButton.addEventListener('change', (e) => {
           settings.floatingButtonEnabled = e.target.checked;
@@ -1743,12 +1781,18 @@
       // Window resize
       let resizeTimeout;
       window.addEventListener('resize', () => {
+        updateViewportInsets();
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
           updateHeaderSpacer();
           setupPagination();
         }, 150);
       });
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', updateViewportInsets);
+        window.visualViewport.addEventListener('scroll', updateViewportInsets);
+      }
 
       // Debug controls for pagination fixes
       setupDebugControls();

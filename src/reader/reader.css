@@ -37,6 +37,10 @@
   --safe-area-top: 0px;
   --safe-area-bottom: 0px;
   --safe-area-manual: 0px; /* User-adjustable offset */
+  --vv-top-offset: 0px;
+  --vv-bottom-offset: 0px;
+  --ui-top-offset: calc(env(safe-area-inset-top, 0px) + var(--safe-area-top) + var(--vv-top-offset));
+  --ui-bottom-offset: calc(env(safe-area-inset-bottom, 0px) + var(--safe-area-bottom) + var(--safe-area-manual) + var(--vv-bottom-offset));
 }
 
 /* Sepia theme */
@@ -156,7 +160,7 @@ body.justify-text #article-content,
    ============================================ */
 #reader-header {
   position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + var(--safe-area-top));
+  top: var(--ui-top-offset);
   left: 0;
   right: 0;
   height: var(--header-height);
@@ -168,8 +172,16 @@ body.justify-text #article-content,
   padding: 0 16px;
   padding-left: calc(16px + env(safe-area-inset-left, 0px));
   padding-right: calc(16px + env(safe-area-inset-right, 0px));
-  z-index: 100;
+  z-index: 1100;
   /* E-ink: No shadow to avoid gray artifacts */
+}
+
+[data-menu-position="bottom"] #reader-header,
+:host([data-menu-position="bottom"]) #reader-header {
+  top: auto;
+  bottom: calc(var(--progress-height) + var(--ui-bottom-offset));
+  border-bottom: none;
+  border-top: 1px solid var(--header-border);
 }
 
 .header-left,
@@ -177,7 +189,8 @@ body.justify-text #article-content,
   display: flex;
   align-items: center;
   gap: 12px;
-  flex: 1;
+  flex: 0 0 auto;
+  min-width: 84px;
 }
 
 .header-right {
@@ -255,13 +268,19 @@ body.justify-text #article-content,
    ============================================ */
 #reader-main {
   position: fixed;
-  top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + var(--safe-area-top));
+  top: calc(var(--header-height) + var(--ui-top-offset));
   left: 0;
   right: 0;
-  bottom: calc(var(--progress-height) + env(safe-area-inset-bottom, 0px) + var(--safe-area-bottom) + var(--safe-area-manual));
+  bottom: calc(var(--progress-height) + var(--ui-bottom-offset));
   display: flex;
   justify-content: center;
   overflow: hidden;
+}
+
+[data-menu-position="bottom"] #reader-main,
+:host([data-menu-position="bottom"]) #reader-main {
+  top: var(--ui-top-offset);
+  bottom: calc(var(--header-height) + var(--progress-height) + var(--ui-bottom-offset));
 }
 
 #article-container {
@@ -489,8 +508,8 @@ body.justify-text #article-content,
    ============================================ */
 .tap-zone {
   position: fixed;
-  top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + var(--safe-area-top));
-  bottom: calc(var(--progress-height) + env(safe-area-inset-bottom, 0px) + var(--safe-area-bottom) + var(--safe-area-manual));
+  top: calc(var(--header-height) + var(--ui-top-offset));
+  bottom: calc(var(--progress-height) + var(--ui-bottom-offset));
   width: 25%;
   min-width: 80px;
   cursor: pointer;
@@ -498,6 +517,13 @@ body.justify-text #article-content,
   pointer-events: auto;
   /* Debug: uncomment to see tap zones */
   /* background: rgba(255, 0, 0, 0.1); */
+}
+
+[data-menu-position="bottom"] .tap-zone,
+:host([data-menu-position="bottom"]) .tap-zone {
+  top: var(--ui-top-offset);
+  bottom: calc(var(--header-height) + var(--progress-height) + var(--ui-bottom-offset));
+  z-index: 900;
 }
 
 #tap-zone-prev {
@@ -515,7 +541,7 @@ body.justify-text #article-content,
    ============================================ */
 #progress-bar {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--safe-area-bottom) + var(--safe-area-manual));
+  bottom: var(--ui-bottom-offset);
   left: 0;
   right: 0;
   height: var(--progress-height);
@@ -536,7 +562,7 @@ body.justify-text #article-content,
 #settings-panel {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 1200;
 }
 
 #settings-panel.hidden {

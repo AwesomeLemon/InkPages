@@ -40,7 +40,8 @@
     grayscale: false,
     noImages: false,
     floatingButtonEnabled: isLikelyAndroid,
-    floatingButtonSize: 50
+    floatingButtonSize: 50,
+    menuAtBottom: false
   };
 
   function normalizeFloatingButtonSize(value) {
@@ -88,6 +89,7 @@
       toggleJustify: document.getElementById('toggle-justify'),
       toggleGrayscale: document.getElementById('toggle-grayscale'),
       toggleNoImages: document.getElementById('toggle-no-images'),
+      toggleMenuBottom: document.getElementById('toggle-menu-bottom'),
       toggleFloatingButton: document.getElementById('toggle-floating-button'),
       floatingButtonSizeSlider: document.getElementById('floating-button-size-slider'),
       floatingButtonSizeValue: document.getElementById('floating-button-size-value'),
@@ -105,6 +107,7 @@
   // ============================================
   async function init() {
     initElements();
+    updateViewportInsets();
 
     try {
       await loadSettings();
@@ -424,6 +427,7 @@
     root.style.setProperty('--font-size', `${settings.fontSize}px`);
     root.style.setProperty('--line-height', settings.lineHeight);
     root.style.setProperty('--page-width', `${settings.pageWidth}px`);
+    root.setAttribute('data-menu-position', settings.menuAtBottom ? 'bottom' : 'top');
 
     body.classList.toggle('bold-text', settings.boldText);
     body.classList.toggle('justify-text', settings.justifyText);
@@ -439,6 +443,28 @@
         setupPagination();
       }, 50);
     }
+  }
+
+  function stabilizeViewportLayout() {
+    const layoutAnchor = elements.pageIndicator || document.documentElement;
+    if (!layoutAnchor || !layoutAnchor.getBoundingClientRect) return;
+    layoutAnchor.getBoundingClientRect();
+  }
+
+  function updateViewportInsets() {
+    const root = document.documentElement;
+    const vv = window.visualViewport;
+    let topOffset = 0;
+    let bottomOffset = 0;
+
+    if (vv) {
+      topOffset = Math.max(0, Math.round(vv.offsetTop));
+      bottomOffset = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    }
+
+    root.style.setProperty('--vv-top-offset', `${topOffset}px`);
+    root.style.setProperty('--vv-bottom-offset', `${bottomOffset}px`);
+    stabilizeViewportLayout();
   }
 
   function updateSettingsUI() {
@@ -469,6 +495,7 @@
     if (elements.toggleJustify) elements.toggleJustify.checked = settings.justifyText;
     if (elements.toggleGrayscale) elements.toggleGrayscale.checked = settings.grayscale;
     if (elements.toggleNoImages) elements.toggleNoImages.checked = settings.noImages;
+    if (elements.toggleMenuBottom) elements.toggleMenuBottom.checked = settings.menuAtBottom;
     if (elements.toggleFloatingButton) elements.toggleFloatingButton.checked = settings.floatingButtonEnabled;
 
     if (elements.floatingButtonSizeSlider) {
@@ -539,7 +566,7 @@
     if (elements.btnCloseReader) elements.btnCloseReader.addEventListener('click', closeReader);
 
     // Settings panel
-    if (elements.btnSettings) elements.btnSettings.addEventListener('click', openSettings);
+    if (elements.btnSettings) elements.btnSettings.addEventListener('click', toggleSettings);
     if (elements.btnCloseSettings) elements.btnCloseSettings.addEventListener('click', closeSettings);
     if (elements.settingsOverlay) elements.settingsOverlay.addEventListener('click', closeSettings);
 
@@ -638,6 +665,14 @@
       });
     }
 
+    if (elements.toggleMenuBottom) {
+      elements.toggleMenuBottom.addEventListener('change', (e) => {
+        settings.menuAtBottom = e.target.checked;
+        applySettings();
+        saveSettings();
+      });
+    }
+
     if (elements.toggleFloatingButton) {
       elements.toggleFloatingButton.addEventListener('change', (e) => {
         settings.floatingButtonEnabled = e.target.checked;
@@ -658,11 +693,17 @@
     // Window resize
     let resizeTimeout;
     window.addEventListener('resize', () => {
+      updateViewportInsets();
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         setupPagination();
       }, 150);
     });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateViewportInsets);
+      window.visualViewport.addEventListener('scroll', updateViewportInsets);
+    }
   }
 
   function handleKeydown(e) {
@@ -735,6 +776,11 @@
 
   function openSettings() {
     if (elements.settingsPanel) elements.settingsPanel.classList.remove('hidden');
+  }
+
+  function toggleSettings() {
+    if (!elements.settingsPanel) return;
+    elements.settingsPanel.classList.toggle('hidden');
   }
 
   function closeSettings() {
