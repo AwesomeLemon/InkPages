@@ -1,3 +1,5 @@
 .Rhistory
 .claude/
 *.zip
+web-ext-artifacts/
+.amo-upload-uuid

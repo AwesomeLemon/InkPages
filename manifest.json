@@ -50,7 +50,7 @@
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "{77d4cdb4-ab52-4e89-ba4b-db8a517a085f}",
+      "id": "inkpages-alex@chebykin.dev",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": ["none"]
